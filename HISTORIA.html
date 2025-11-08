@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examen de Historia - Cantidad Variable</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #007bff;
+            margin-bottom: 15px;
+        }
+        /* Sección de configuración para el input */
+        .config-section {
+            text-align: center;
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background-color: #e9f0f9;
+        }
+        .config-section label {
+            font-weight: bold;
+            color: #333;
+            margin-right: 10px;
+        }
+        .config-section input[type="number"] {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #999;
+            text-align: center;
+        }
+        .config-section button {
+            padding: 8px 15px;
+            background-color: #ffc107;
+            color: #333;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .config-section button:hover {
+            background-color: #e0a800;
+        }
+
+        /* Estilos de Preguntas */
+        .question-block {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            background-color: #fafafa;
+        }
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            color: #212529;
+        }
+        .options label {
+            display: block;
+            margin: 8px 0;
+            padding: 5px 0;
+            cursor: pointer;
+        }
+        .options input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        /* Estilos de Botones de Calificación y Envío */
+        .button-group {
+            margin-top: 20px;
+        }
+        .button-group button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.2em;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: background-color 0.3s;
+        }
+        #calculateBtn {
+            background-color: #28a745;
+            color: white;
+        }
+        #calculateBtn:hover {
+            background-color: #218838;
+        }
+        #sendBtn {
+            background-color: #007bff;
+            color: white;
+            display: none;
+        }
+        #sendBtn:hover {
+            background-color: #0056b3;
+        }
+
+        /* Estilos de Resultados */
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: bold;
+            display: none;
+        }
+        .correct {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .incorrect {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .correct-answer {
+            color: #155724;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Examen de Historia</h1>
+    <p style="text-align: center; font-weight: bold;">Banco total de preguntas: <span id="totalQuestionsAvailable" style="color: #007bff;">100</span>.</p>
+    
+    <div class="config-section">
+        <label for="numQuestions">Número de preguntas a evaluar:</label>
+        <input type="number" id="numQuestions" value="20" min="1" max="100" style="width: 80px; text-align: center;">
+        <button type="button" onclick="generateQuiz()">Cargar Nuevo Examen</button>
+    </div>
+
+    <p style="text-align: center; font-weight: bold;">Preguntas cargadas: <span id="currentLoadedQuestions" style="color: #dc3545;">20</span>.</p>
+    
+    <form id="quizForm">
+        </form>
+    
+    <div class="button-group">
+        <button type="button" id="calculateBtn" onclick="calculateScore()">Calificar Examen</button>
+        <button type="button" id="sendBtn" onclick="sendResults()">Enviar Resultados a rjhimyaa@gmailcom</button>
+    </div>
+    
+    <div id="results" class="results"></div>
+</div>
+
+<script>
+    // Correo de destino
+    const DESTINATION_EMAIL = "rjhimyaa@gmailcom";
+
+    // ***************************************************************
+    // 1. BANCO DE 100 PREGUNTAS (Extraídas de HISTORIA.pdf)
+    // ***************************************************************
+    const quizData = [
+        { id: 1, question: "Los maestros que formaron a Simón Bolívar como político con ideas progresistas, respecto a la formación y organización de un gobierno propio de Sudamérica, fueron:", options: ["Simón Romero y Andrés Acuña.", "Simón Rodríguez y Andrés Bello.", "Andrés Rodríguez y Simón Bello.", "Ninguna."], correctAnswer: "Simón Rodríguez y Andrés Bello." },
+        { id: 2, question: "La Gran Colombia fue un proyecto político que integro los actuales países de:", options: ["Venezuela, Colombia, Ecuador y Panamá.", "Panamá, Ecuador, Colombia, Perú y Venezuela.", "Venezuela, Colombia, Bolivia y Ecuador.", "Venezuela, Colombia, Ecuador, Panamá, Perú y la actual Bolivia."], correctAnswer: "Venezuela, Colombia, Ecuador y Panamá." },
+        { id: 3, question: "José de San Martin fue un líder político que fue influenciado por la revolución política que se generaba en Europa durante el siglo XVII; quien cultivo sus ideales bajos los estudios de:", options: ["Populismo.", "Liberalismo y la ilustración.", "Nacionalismo y liberación.", "Ninguno."], correctAnswer: "Liberalismo y la ilustración." },
+        { id: 4, question: "José de San Martin con la concepción de que los pueblos son los que deben tomar las decisiones para su organización gubernamental, toma parte en las luchas por la independencia de:", options: ["Chile, Perú y Argentina.", "Argentina, Perú y Panamá.", "Argentina, Chile y Ecuador.", "Argentina, Venezuela y Perú."], correctAnswer: "Chile, Perú y Argentina." },
+        { id: 5, question: "El Panamericanismo es una corriente política, social, económica y diplomática americana que tiene como objeto originar, promover, alimentar, acondicionar u organizar las relaciones de cooperación y asociación que se puedan generar entre los países que forman américa; se considera como creador o creadores de esta corriente a:", options: ["José de San Martin.", "Simón Bolívar y José de San Martin.", "Simón Bolívar,", "José Martí."], correctAnswer: "Simón Bolívar," },
+        { id: 6, question: "En el Ensayo publicado por José Martí (1853-1895) manifiesta que los americanos deberían crear una consciencia continental para establecer su propio desarrollo político, económico y social; este ensayo es titulado:", options: ["Nuestros americanos.", "Panamericanismo.", "Liberación e independencia.", "Nuestra América."], correctAnswer: "Nuestra América." },
+        { id: 7, question: "El politólogo Marcelo Gullo, estructura el concepto de poder, con base en las relaciones políticas entre países; este poder se vincula con el orden entre países centrales y periféricos que demuestra la:", options: ["Asimetría de las relaciones nacionales.", "Simetría de las relaciones internacionales.", "Asimetría de las relaciones internacionales.", "Todas."], correctAnswer: "Asimetría de las relaciones internacionales." },
+        { id: 8, question: "El autor del himno \"Salve ¡oh! Patria\" fue:", options: ["José Aguirre Achá.", "José Achá Aguirre.", "Juan Aguirre Achá.", "Juan Achá Aguirre."], correctAnswer: "José Aguirre Achá." },
+        { id: 9, question: "Existe otra ciudad en el mundo que adoptó el nombre de Potosí por su esplendor histórico; esta ciudad es:", options: ["San Luis de Potosí - Panamá.", "San Luis de Potosí - México.", "San José de Potosí - Ecuador.", "San José de Potosí - México."], correctAnswer: "San Luis de Potosí - México." },
+        { id: 10, question: "La frase \"La unidad de nuestro pueblos no es simple quimera de los hombres sino inexorable decreto del destino\" fue creada por:", options: ["José de San Martin.", "José Martí.", "Simón Bolívar.", "Ninguno."], correctAnswer: "Simón Bolívar." },
+        { id: 11, question: "El proyecto latinoamericano orientado a organizar una estructura conjunta de varios países fue concebido por:", options: ["Simón Bolívar.", "José de San Martin.", "Simón Bolívar y José de San Martín.", "Antonio José de Sucre."], correctAnswer: "Simón Bolívar." },
+        { id: 12, question: "La Batalla de Ayacucho (9 de diciembre de 1824) se desarrolló bajo el mando de:", options: ["Andrés de Santa Cruz.", "Antonio José de Sucre.", "José de San Martín.", "Ninguno."], correctAnswer: "Antonio José de Sucre." },
+        { id: 13, question: "La batalla que marco definitivamente la desintegración del Ejército Realista en la Real Audiencia de Charcas, poniendo el sello histórico para la futura independencia de nuestro país fue:", options: ["Batalla de Junín.", "Batalla de Ayacucho.", "Batalla de Tumusla.", "Ninguna."], correctAnswer: "Batalla de Tumusla." },
+        { id: 14, question: "La Asamblea Deliberante convocada en la Ciudad de Oruro, el 9 de abril 1825 cambio de sede debido a:", options: ["Malas condiciones climáticas.", "Aún no se habían elegido a los representantes de la Plata (Chuquisaca).", "Aún no se habían elegido a los representantes de Potosí.", "Todas."], correctAnswer: "Aún no se habían elegido a los representantes de la Plata (Chuquisaca)." },
+        { id: 15, question: "Manuel Asencio Padilla, esposo de Juana Azurduy murió en 1816 en la batalla de:", options: ["Junín.", "Ayacucho.", "Tumusla.", "El Villar."], correctAnswer: "El Villar." },
+        { id: 16, question: "La Asamblea Deliberante se reunió en Chuquisaca el 6 de agosto de 1825 y los representantes provinciales procedieron a la toma de decisión de los destinos de la Real Audiencia de Charcas; estos representantes eran parte de:", options: ["Oligarquía regional.", "Comunidades Originarias.", "Representatividad de la Mujer.", "Oligarquía Regional y excepcionalmente de una Comandante Guerrillero."], correctAnswer: "Oligarquía Regional y excepcionalmente de una Comandante Guerrillero." },
+        { id: 17, question: "La heroína de la independencia que fue relegada por la oligarquía criolla de todo acto organizativo previamente y durante la firma de nuestra independencia fue:", options: ["Juana Azurduy de Padilla.", "Bartolina Sisa.", "Vicenta Juaristi Eguino.", "Gregoria Apaza."], correctAnswer: "Juana Azurduy de Padilla." },
+        { id: 18, question: "Las acciones del Primer Gobierno Nacional asumido por Simón Bolívar fueron:", options: ["Declara la distribución y venta de las tierras estatales mediante decreto.", "Suprime la mita minera.", "Declara la no existencia de la exclavitud.", "Todas."], correctAnswer: "Todas." },
+        { id: 19, question: "La naciente Bolivia se estructuro sobre la base del territorio de la Real Audiencia de Charcas, bajo el principio jurídico territorial de:", options: ["Uti Possidetis de Juris.", "Uti Possidetis Juris.", "Uti Possidetis Facto.", "Todas."], correctAnswer: "Uti Possidetis Juris." },
+        { id: 20, question: "Los Departamentos que fueron parte de la organización territorial y administrativa de Bolivia durante los primeros años de su creación fueron:", options: ["La Paz, Cochabamba, Chuquisaca y Potosí.", "La Paz, Potosí, Chuquisaca, Oruro y Santa Cruz.", "Santa Cruz, Chuquisaca, Cochabamba, Potosí y La Paz.", "La Paz, Potosí, Cochabamba, Chuquisaca y Oruro."], correctAnswer: "Santa Cruz, Chuquisaca, Cochabamba, Potosí y La Paz." },
+        { id: 21, question: "La primera Constitución de Bolivia fue promulgada el:", options: ["19 de noviembre de 1826.", "19 de noviembre de 1825", "6 de agosto de 1825.", "9 de febrero de 1826."], correctAnswer: "19 de noviembre de 1826." },
+        { id: 22, question: "Entre los puntos considerados en la primera Constitución de Bolivia se establece la organización estatal bajo el orden de los poderes:", options: ["Ejecutivo, legislativo y judicial.", "Ejecutivo, legislativo, judicial y electoral.", "Ejecutivo, legislativo y electoral.", "Ejecutivo y legislativo."], correctAnswer: "Ejecutivo, legislativo, judicial y electoral." },
+        { id: 23, question: "Durante el gobierno del Mariscal Antonio José de Sucre y bajo la ley del 5 de septiembre de 1826 se crea el departamento de:", options: ["Beni.", "Santa Cruz.", "Potosí.", "Oruro."], correctAnswer: "Oruro." },
+        { id: 24, question: "Durante el Gobierno del Mariscal Antonio José de Sucre como parte de las acciones para generar mayores ingresos estatales se confisco propiedades y grandes cantidades de tierras a:", options: ["La iglesia Católica.", "La Oligarquía criolla.", "La Clase clerical.", "La Clase indígena."], correctAnswer: "La iglesia Católica." },
+        { id: 25, question: "Como consecuencia del motín de Chuquisaca del 18 de abril 1828 el Mariscal Antonio José de Sucre no pudo continuar con sus actos de gobierno dejando las riendas del país a:", options: ["Simón Rodríguez Carreño.", "Casimiro Olañeta.", "José Miguel Lanza.", "General José María Pérez de Urdininea."], correctAnswer: "General José María Pérez de Urdininea." },
+        { id: 26, question: "El presidente José María Pérez de Urdininea para reestablecer la paz con el Perú, firmaría el 7 de julio de 1828 el tratado de :", options: ["Congreso extraordinario.", "Piquiza.", "Alto Perú.", "Chuquisaca."], correctAnswer: "Piquiza." },
+        { id: 27, question: "El primer presidente de origen boliviano (anteriormente llamada Real Audiencia de Charcas) fue:", options: ["Simón Bolívar.", "Antonio José de Sucre.", "General José María Pérez de Urdininea.", "José Miguel Lanza."], correctAnswer: "General José María Pérez de Urdininea." },
+        { id: 28, question: "Los principios de la educación popular técnica diseñada por Simón Rodríguez Carreño fueron:", options: ["Educación con las bases productivas en el país.", "Educación crítica para la libertad.", "Educación igualitaria para mujeres y varones.", "Todas."], correctAnswer: "Todas." },
+        { id: 29, question: "El departamento de Tarija fue creado durante el gobierno del Mariscal Andrés de Santa Cruz en el año:", options: ["1827.", "1828.", "1831.", "1832."], correctAnswer: "1831." },
+        { id: 30, question: "La Batalla que dio lugar a la formación de la Confederación Perú-Boliviana fue:", options: ["Batalla de Socabaya.", "Batalla de Yanacocha.", "Batalla de Uchumayu.", "Batalla de Yungay."], correctAnswer: "Batalla de Socabaya." },
+        { id: 31, question: "La Batalla que consolido la anexión o pertenencia de Tarija a Bolivia fue:", options: ["Batalla de Yungay.", "Batalla de Socabaya.", "Batalla de Monte negro.", "Ninguna."], correctAnswer: "Batalla de Monte negro." },
+        { id: 32, question: "En el año 1839 sucedió la Batalla de Yungay enfrentándose el Ejército Chileno contra las fuerzas de la Confederación Perú - Boliviana, la consecuencia de esta batalla fue:", options: ["Consolidación de la Confederación.", "Disolución de la confederación.", "Firma del tratado de Paucarpata.", "Anexión de Tarija a Bolivia."], correctAnswer: "Disolución de la confederación." },
+        { id: 33, question: "El 18 de noviembre de 1841 se libraría la Batalla de Ingavi (en cercanías de la actual ciudad de Viacha), donde la victoria nacional sellaría la independencia de nuestro país; nuestras tropas se encontraban bajo el liderazgo militar de:", options: ["José Miguel de Velasco.", "Agustín Gamarra.", "José Ballivián.", "Andrés de Santa Cruz."], correctAnswer: "José Ballivián." },
+        { id: 34, question: "Durante el gobierno de José Ballivián se creó el departamento de:", options: ["Beni.", "Cobija.", "Tarija.", "Santa Cruz."], correctAnswer: "Beni." },
+        { id: 35, question: "El himno nacional de Bolivia fue entonado por primera vez el:", options: ["18 de noviembre 1941.", "18 de noviembre 1942.", "18 de noviembre 1944.", "18 de noviembre 1945."], correctAnswer: "18 de noviembre 1945." },
+        { id: 36, question: "Manuel Isidoro Belzu accedió al mandato derrocando al General Velasco en diciembre de 1948 en la Batalla de:", options: ["Ingavi.", "Socabaya.", "Yamparáez.", "Yungay."], correctAnswer: "Yamparáez." },
+        { id: 37, question: "En el gobierno de Belzu se establecería la bandera nacional actual, la cual flamearía por primera vez el 31 de octubre de 1851 en la ciudad de:", options: ["La Paz (Plaza Murillo).", "Sucre (Casa de la libertad)", "Oruro (Faro de Conchupata).", "Sucre (Plaza 25 de mayo)."], correctAnswer: "Oruro (Faro de Conchupata)." },
+        { id: 38, question: "El gobierno que ejecuto una política agraria que marcó la destrucción sistemática de la propiedad de las comunidades originarias fue:", options: ["José María Linares.", "José María Acha.", "Mariano Melgarejo.", "Manuel Isidoro Belzu."], correctAnswer: "Mariano Melgarejo." },
+        { id: 39, question: "Nuestro país nació con el nombre oficial de Bolívar, sin embargo, el 3 de octubre de 1825, cambio a Bolivia bajo el fundamento de que 'si de Rómulo, Roma, de Bolívar, Bolivia'; por sugerencia de:", options: ["Manuel Martín de Santa Cruz.", "Carlos Medinacelli.", "José Miguel Lanza.", "José Mariano Serrano."], correctAnswer: "José Mariano Serrano." },
+        { id: 40, question: "Una de las medidas asumidas para solucionar el problema de la tenencia de las tierras para los pueblos indígenas por parte de los gobiernos desde 1825 fue: 'Se extingue el título y autoridad de los caciques. Se prohíbe el servicio personal de los indígenas, así como la remuneración forzada en especie, restringiendo el poder y los abusos de los párrocos en su relación con los indígenas'. Esta medida fue asumida en el gobierno de:", options: ["José María Acha (1861-1864).", "José Ballivián (1841-1847).", "Mariscal Andrés de Santa Cruz (1829-1839).", "Simón Bolívar (1825)."], correctAnswer: "Simón Bolívar (1825)." },
+        { id: 41, question: "Desde 1850 se produjo, en algunos países europeos, el fenómeno cuyo final gran parte de los historiadores los sitúan en 1914; este fenómeno es conocido como:", options: ["Segunda Revolución Industrial.", "Revolución Industrial.", "Tiempos Modernos.", "Primera Revolución Industrial."], correctAnswer: "Segunda Revolución Industrial." },
+        { id: 42, question: "La causa inmediata para el inicio de la Guerra del Pacífico fue:", options: ["Anhelo de Chile para expandir su territorio.", "Impuesto de diez centavos por quintal de salitre exportado.", "Invasión al litoral Boliviano.", "Defensa de los capitales anglo-chilenos."], correctAnswer: "Impuesto de diez centavos por quintal de salitre exportado." },
+        { id: 43, question: "El salitre se utilizaba en la fabricación de explosivos y era además un excelente fertilizante. Este recurso tenía sus yacimientos principales en:", options: ["Los desiertos de Atacama (Boliviano) y Tarapacá (Peruano).", "Los desiertos de Atacama (Peruano) y Tarapacá (Boliviano).", "Bolivia y Perú.", "Los desiertos de Antofagasta (Boliviano) y Tarapacá (Peruano)."], correctAnswer: "Los desiertos de Atacama (Boliviano) y Tarapacá (Peruano)." },
+        { id: 44, question: "El tratado de medianería firmado el año 1866 entre Bolivia y Chile se estableció que la frontera entre ambos países quedaría fijada en el paralelo 24; esto significó para Bolivia una perdida inicial de:", options: ["2200 leguas cuadradas.", "1200 kilómetros cuadrados.", "1200 leguas cuadradas.", "2200 kilómetros cuadrados."], correctAnswer: "1200 leguas cuadradas." },
+        { id: 45, question: "Las causas de la Guerra del Pacífico fueron:", options: ["Expansionismo chileno.", "Disputa por la hegemonía regional entre Perú y Chile.", "Cuestión Limítrofe pendiente entre Bolivia y Chile.", "Todas."], correctAnswer: "Todas." },
+        { id: 46, question: "La Guerra del Pacífico inicia el 14 de febrero de 1879 en la Campaña de:", options: ["Campaña de Tarapacá.", "Campaña Marítima.", "Campaña de Tacna.", "Campaña de Atacama."], correctAnswer: "Campaña de Atacama." },
+        { id: 47, question: "El 8 de octubre de 1879 se produce un combate en el que los buques de guerra Chilenos cercan y toman al Buque de Guerra Peruano 'Huáscar'; esta batalla se denominó:", options: ["Batalla Naval de Tacna.", "Batalla Naval de Iquique.", "Combate de Angamos.", "Ninguna."], correctAnswer: "Combate de Angamos." },
+        { id: 48, question: "En la Campaña de Tarapacá las Tropas Chilenas se apropiaron del desierto boliviano de Atacama y el desierto peruano de Tarapacá lo que trajo repercusiones políticas provocando:", options: ["La destitución del Presidente Daza.", "La destitución del Presidente Campero.", "La firma de la alianza defensiva entre Bolivia y Perú.", "Dominio marítimo de Chile."], correctAnswer: "La destitución del Presidente Daza." },
+        { id: 49, question: "La Batalla del Alto de la Alianza fue el:", options: ["26 de mayo 1879.", "26 de mayo 1880.", "27 de mayo 1880.", "20 de mayo 1880."], correctAnswer: "26 de mayo 1880." },
+        { id: 50, question: "Durante la Guerra del Pacífico sucedió una Batalla que fue ignorada o mantenida en secreto durante casi 100 años; esta fue la:", options: ["Batalla del Alto de la Alianza.", "Batalla de Tacna.", "Batalla de Mollendo.", "Batalla de Canchas Blancas."], correctAnswer: "Batalla de Canchas Blancas." },
+        { id: 51, question: "El tratado que ratifica la cesión que hace Bolivia en favor de Chile de desierto de Atacama desde el río Loa hasta el paralelo 23; lo que ha sido considerado el motivo de enclaustramiento de Bolivia; este fue:", options: ["El tratado de 1904.", "El tratado de Paz 1895.", "El tratado de transferencia de territorio de 1904.", "El tratado de Comercio de 1904."], correctAnswer: "El tratado de 1904." },
+        { id: 52, question: "Durante el periodo de la posguerra, la actividad económica en Bolivia estaba ligada principalmente a:", options: ["Explotación de la Plata.", "Explotación Estaño.", "Explotación del Oro.", "Explotación del Salitre."], correctAnswer: "Explotación Estaño." },
+        { id: 53, question: "El presidente que fue artífice de la construcción de pequeñas vías para carreteras y, posteriormente, el ferrocarril; fue:", options: ["Narciso Campero.", "Hilarión Daza.", "Aniceto Arce.", "Ninguno."], correctAnswer: "Aniceto Arce." },
+        { id: 54, question: "El periodo de la posguerra, dio pie a un periodo de modernización. Este periodo tiene cinco etapas; la etapa que comprende la privatización de los ferrocarriles inicio en el año:", options: ["1964.", "1930.", "1900.", "1997."], correctAnswer: "1997." },
+        { id: 55, question: "El Estado oligárquico: Al terminar el conflicto bélico del Pacifico, surgió en la región Sur del país (Sucre y Potosí), una burguesía minera e industrial, fundando el Partido Liberal fundado por:", options: ["Aniceto Arce.", "Eliodoro Camacho.", "Gregorio Pacheco.", "Mariano Baptista."], correctAnswer: "Eliodoro Camacho." },
+        { id: 56, question: "El estallido de la Guerra Civil que enfrentaron Sucre y La Paz (el sur contra el norte) por la consolidación como capital de la República; fue en el año", options: ["1789.", "1898.", "1899.", "1889"], correctAnswer: "1898." },
+        { id: 57, question: "El auge de la plata se produjo después de la Guerra del Pacífico y su explotación estuvo relacionada con la política de ese entonces, ya que los dos empresarios mineros más prominentes de todo el país eran:", options: ["Aniceto Arce y Gregorio Pacheco.", "Aniceto Pacheco y Gregorio Arce.", "Mariano Baptista y Severo Fernández Alonso.", "Ninguno."], correctAnswer: "Aniceto Arce y Gregorio Pacheco." },
+        { id: 58, question: "Durante el gobierno de Aniceto Arce, entre 1888-1892, se construyó el primer ferrocarril boliviano, el cual unió las ciudades de:", options: ["Oruro con La Paz.", "Oruro con Potosí.", "Oruro con Antofagasta.", "La Paz con Potosí."], correctAnswer: "Oruro con Antofagasta." },
+        { id: 59, question: "La Ley promulgada en 1874, disponía la extensión de las comunidades y la parcelación de las tierras entre los comunarios; esta fue denominada ley de:", options: ["Exvinculación.", "Colonización.", "Descolonización.", "Vinculación."], correctAnswer: "Exvinculación." },
+        { id: 60, question: "En 1872, Aniceto Arce y sus viejos amigos chilenos, nada menos que los representantes más notorios de los intereses salitreros y argentíferos, chilenos e ingleses, fundaron el Banco Nacional de Bolivia en la ciudad de:", options: ["La Paz.", "Oruro.", "Potosí.", "Sucre."], correctAnswer: "Sucre." },
+        { id: 61, question: "La polémica Ley de Radicatoria, con la que ratificaba a Sucre como la capital. Como consecuencia, y por la inconformidad de los liberales paceños, comenzó la guerra civil; esta ley fue promulgada en el gobierno de:", options: ["Severo Fernández Alonso.", "Aniceto Arce.", "Mariano Baptista.", "Tomas Frías."], correctAnswer: "Severo Fernández Alonso." },
+        { id: 62, question: "Entre otro de los aspectos históricos más importantes del periodo de Severo Fernández Alonso, destacan las condiciones que dieron origen a la Guerra Federal; estos aspectos son:", options: ["Disputa de la minería de la plata.", "El surgimiento del estaño.", "Rivalidades existentes entre los dos partidos políticos, conservadores y liberales.", "Todas."], correctAnswer: "Todas." },
+        { id: 63, question: "El 31 de octubre de 1898, los diputados de Sucre propusieron la instalación definitiva de la capital ejecutiva en Sucre con la Ley de Radicatoria, pero sus contrapartes, de La Paz, propusieron que el Congreso debía trasladarse a:", options: ["Oruro.", "Potosí.", "Cochabamba.", "La Paz"], correctAnswer: "La Paz" },
+        { id: 64, question: "Durante el gobierno de José Manuel Pando, Bolivia atravesó por el periodo del estaño, comercializado fuera del país. Periodo en el que surgieron los barones del estaño:", options: ["Simón Iturri Patiño y Mauricio Hoschilld.", "Simón Iturri Patiño y Víctor Carlos Aramayo.", "Víctor Carlos Aramayo y Mauricio Hoschilld.", "Simón Iturri Patiño, Víctor Carlos Aramayo y Mauricio Hoschilld."], correctAnswer: "Simón Iturri Patiño, Víctor Carlos Aramayo y Mauricio Hoschilld." },
+        { id: 65, question: "Una vez que estallo la Revolución Federal, el presidente Severo Fernández Alonzo organizó un ejército para dirigirse a la ciudad de La Paz, cuando se encontraba cerca de la ciudad, el contingente y el propio Fernández, fueron atacados por un grupo de aymaras dirigidos por:", options: ["Pablo Zárate Villca.", "Andrés Zárate Villca.", "Pablo Villca.", "Ninguno."], correctAnswer: "Pablo Zárate Villca." },
+        { id: 66, question: "En 1880 se aprueba la Constitución Política de la República de Bolivia, sus bases son de tinte liberal y con la mirada puesta en Europa, como el modelo de sociedad a imitar; esta forma de pensar y actuar se denomina:", options: ["Euro central.", "Eurocentrismo.", "Liberal.", "Conservadora."], correctAnswer: "Eurocentrismo." },
+        { id: 67, question: "Tomando en cuenta los diferentes antecedentes históricos podemos decir que se conoce como la Guerra Federal a una contienda civil (1898-1899) que llegó a enfrentar con las armas a las ciudades de Sucre y La Paz, la que se definió a favor de", options: ["Sucre.", "La Paz.", "Potosí.", "Oruro"], correctAnswer: "La Paz." },
+        { id: 68, question: "El área de mayor explotación del caucho o goma elástica fue:", options: ["Santa Cruz, Beni y Pando.", "Santa Cruz, Norte de La Paz y Pando.", "Beni, Pando, y norte de La Paz.", "Beni y Pando"], correctAnswer: "Beni, Pando, y norte de La Paz." },
+        { id: 69, question: "El pionero de la goma que introdujo una de las primeras embarcaciones a vapor para navegación en los ríos amazónicos fue:", options: ["Nicanor Gonzalo Salvatierra.", "Augusto Roca.", "Antonio Vaca Diez.", "Nicolás Suarez Callaú."], correctAnswer: "Nicolás Suarez Callaú." },
+        { id: 70, question: "Bolivia y Brasil firmaron el Tratado de Metrópolis, mediante el cual la región del Acre se anexaría a la soberanía de Brasil, este tratado fue firmado el:", options: ["17 de noviembre de 1903.", "17 de julio de 1902.", "17 de noviembre de 1902.", "17 de noviembre de 1901."], correctAnswer: "17 de noviembre de 1903." },
+        { id: 71, question: "Bruno Racua (1879-1932) fue un héroe nacional de la Guerra del Acre que luchó armado con un arco y una flecha, fue un artífice de la victoria boliviana en la Batalla de:", options: ["Riosinho.", "Puerto Acre.", "Bahía.", "Puerto Rico."], correctAnswer: "Puerto Rico." },
+        { id: 72, question: "El liberalismo fue la tendencia política y económica que dominó el territorio boliviano durante las últimas décadas del siglo XIX y los primeros años del siglo XX. Bajo el lema de “modernidad y progreso”, los gobiernos liberales desarrollaron un proyecto económico que se basó fundamentalmente en:", options: ["La explotación o producción de la minería y el latifundismo.", "Explotación de la goma o el caucho.", "El latifundismo.", "Producción de la minería."], correctAnswer: "La explotación o producción de la minería y el latifundismo." },
+        { id: 73, question: "Como parte del proyecto progresista de los gobiernos liberales, se fundó la Escuela Nacional de Maestros en Sucre; durante el gobierno de:", options: ["Daniel Sánchez Bustamante.", "José Manuel Pando.", "Fernando Guachalla.", "Ismael Montes."], correctAnswer: "Ismael Montes." },
+        { id: 74, question: "Los barones del Estaño desarrollaron y actualizaron la producción minera favoreciendo a ciudades como Oruro y Potosí, y consolidó nuevos centros urbanos, a los pies de las minas más importantes:", options: ["Huanuni (Potosi) y Llallagua (La Paz).", "Huanuni (Oruro) y Llallagua (Potosí).", "Huanuni (Potosi) y Llallagua (Oruro).", "Huanuni (La Paz) y Llallagua (Potosí)."], correctAnswer: "Huanuni (Oruro) y Llallagua (Potosí)." },
+        { id: 75, question: "Un buen Censo de Población y Vivienda debe cumplir las siguientes características fundamentales:", options: ["Enumeración individual", "Universalidad", "Simultaneidad y Periodicidad.", "Todas."], correctAnswer: "Todas." },
+        { id: 76, question: "El Censo de Población y Vivienda se realizará en:", options: ["Un solo día en áreas urbanas y rurales.", "Tres días en áreas urbanas y un día en áreas rurales.", "Un solo día en áreas urbanas y hasta tres días en áreas rurales.", "Tres días en áreas urbanas y rurales."], correctAnswer: "Un solo día en áreas urbanas y hasta tres días en áreas rurales." },
+        { id: 77, question: "La información permitió saber las condiciones económicas exactas de todas las regiones del imperio y las decisiones adecuadas para actuar y prevenir las catástrofes, tales como sequía y hambre; esta información la contenía el:", options: ["El quipu ideográfico.", "El quipu ideográfico de los amautas.", "El quipu estadístico.", "El quipu informativo."], correctAnswer: "El quipu estadístico." },
+        { id: 78, question: "El primer censo de la época republicana se realizó el año:", options: ["1825.", "1831.", "1828.", "1832."], correctAnswer: "1831." },
+        { id: 79, question: "El proceso industrializador del siglo XIX fue alcanzado por la mayor parte de las potencias occidentales... ante el resquebrajamiento de una de las más grandes potencias orientales que trajo como consecuencia la primera Guerra mundial; esta potencia oriental fue:", options: ["Imperio Español.", "Imperio Francés.", "Imperio Otomano.", "Imperio Ruso."], correctAnswer: "Imperio Otomano." },
+        { id: 80, question: "Se considera como la causa inmediata para el estallido de la Primera Guerra Mundial el asesinato de:", options: ["El archiduque del Imperio Otomano, Francisco Fernando.", "El archiduque de Austria, Francisco Fernando.", "El archiduque de Bosnia, Francisco Fernando.", "Ninguno."], correctAnswer: "El archiduque de Austria, Francisco Fernando." },
+        { id: 81, question: "La alianza denominada la Triple Entente eran parte los países de:", options: ["Rusia, Gran Bretaña y Francia.", "Rusia, Austria y Francia.", "Rusia, Austria y Gran Bretaña.", "Alemania, Bosnia y Austria."], correctAnswer: "Rusia, Gran Bretaña y Francia." },
+        { id: 82, question: "La Primera Guerra Mundial se caracterizó por la aparición de nuevas armas y tecnología que obligaron a los combatientes a desarrollar la guerra entre trincheras, el espacio que que separaban a las tropas enemigas, fue denominada como: la tierra de nadie.”:", options: ["La tierra de todos.", "La tierra de ninguno.", "La tierra de nadie.", "Ninguna."], correctAnswer: "La tierra de nadie." },
+        { id: 83, question: "La batalla de Verdún fue la más terrible de la Primera Guerra Mundial, así como la más larga (entre febrero y diciembre de 1916). En esta batalla cada bando perdió más de:", options: ["100.000 combatientes.", "1.000.000 de combatientes.", "2.000.000 de combatientes.", "1.000.000 de no combatientes."], correctAnswer: "100.000 combatientes." },
+        { id: 84, question: "Durante la Primera Guerra Mundial la guerra en el mar fue también novedosa. En realidad, el país que tenía la superioridad en barcos de guerra era:", options: ["Rusia.", "Francia.", "Gran Bretaña.", "Alemania."], correctAnswer: "Gran Bretaña." },
+        { id: 85, question: "La entrada de Estados Unidos a la 1º Guerra Mundial fue determinante... Los motivos declarados de Estados Unidos para entrar en el conflicto, fueron:", options: ["La capitulación de los austriacos.", "La capitulación de los búlgaros.", "Ataque de los alemanes contra aviones estadounidenses.", "Los hundimientos de varios de sus barcos mercantes, ocasionados por submarinos alemanes."], correctAnswer: "Los hundimientos de varios de sus barcos mercantes, ocasionados por submarinos alemanes." },
+        { id: 86, question: "Luego del armisticio, las potencias en guerra firmaron un tratado, que puso fin a la guerra, mediante el cual las triunfadoras impusieron condiciones durísimas a las derrotadas¸ este tratado fue denominado:", options: ["El Tratado de Versalles – Rusia.", "El Tratado de Versalles – Francia.", "El Tratado de Versalles – Alemania.", "Ninguno."], correctAnswer: "El Tratado de Versalles – Alemania." },
+        { id: 87, question: "Los aliados impusieron astronómicas indemnizaciones de guerra a Alemania y a Austria; además el Ejército alemán se redujo a 100 mil hombres y se le negó la posibilidad de:", options: ["Tener artillería pesada.", "Tener fuerza aérea.", "Tener submarinos", "Todas."], correctAnswer: "Todas." },
+        { id: 88, question: "Una de las consecuencias de la Primera Guerra Mundial es la creación de una organización internacional que pretendía asociar a los Estados independientes del mundo para constituirse en un escenario de resolución de sus diferencias. Esta organización fue denominada:", options: ["Organización de las Naciones Unidas.", "Las Naciones Unidas.", "La Sociedad de las Naciones.", "La Cruz Roja Internacional."], correctAnswer: "La Sociedad de las Naciones." },
+        { id: 89, question: "El periodo de entreguerras es el tiempo que transcurrió entre el fin de la Primera Guerra Mundial, en 1918, y el inicio de la Segunda Guerra Mundial, en 1939. Se trata de un periodo caracterizado por una terrible:", options: ["Crisis económica y por varias crisis políticas.", "Crisis social y tecnológica.", "Crisis política y por varias crisis económicas.", "Crisis humanitaria y crisis económica."], correctAnswer: "Crisis económica y por varias crisis políticas." },
+        { id: 90, question: "Cuando toda la bolsa de valores de Wall Street en Nueva York se vino abajo... produjo entonces el denominado crack del año:", options: ["1829.", "1929.", "1932.", "1935."], correctAnswer: "1929." },
+        { id: 91, question: "El periodo de entreguerras se caracterizó por una polarización extrema de las luchas políticas. Esto llevó principalmente al surgimiento del, principalmente:", options: ["Imperialismo.", "Comunismo (Rusia).", "Nazismo (Italia) y del fascismo (Alemania).", "Nazismo (Alemania) y del fascismo (Italia)."], correctAnswer: "Nazismo (Alemania) y del fascismo (Italia)." },
+        { id: 92, question: "El líder alemán que intento un golpe de Estado en Múnich y a consecuencia fue a dar a la cárcel; donde escribiría, su famosa obra “MI LUCHA”... este líder fue:", options: ["Adolf Hitler.", "Adolfo Hitler.", "Benito Mussolini.", "Josef Stalin."], correctAnswer: "Adolf Hitler." },
+        { id: 93, question: "El Partido Nacional Fascista fue creado en:", options: ["Gran Bretaña.", "Francia.", "Italia.", "Alemania."], correctAnswer: "Italia." },
+        { id: 94, question: "La ironía de la historia quiso que un país europeo estuviera ausente de las dos guerras mundiales, pero que, en el periodo de entreguerras, experimentara la guerra civil más trágica de la historia de Europa, este país fue:", options: ["España.", "Francia.", "Gran Bretaña.", "Austria."], correctAnswer: "España." },
+        { id: 95, question: "El vínculo legal que denota pertenencia e identidad de una persona con una comunidad organizada al grado de Estado, el cual genera algunos derechos y obligaciones entre ambos, es:", options: ["Identidad.", "Pertinencia.", "Nacionalidad.", "Obligación."], correctAnswer: "Nacionalidad." },
+        { id: 96, question: "CPE. Artículo 142.- Podrán adquirir la nacionalidad boliviana por naturalización las extranjeras y los extranjeros en situación legal, con:", options: ["Más de un año de residencia ininterrumpida en el país bajo supervisión del Estado.", "Más de tres años de residencia ininterrumpida en el país sin supervisión del Estado.", "Más de dos años de residencia ininterrumpida en el país bajo supervisión del Estado.", "Más de tres años de residencia ininterrumpida en el país bajo supervisión del Estado."], correctAnswer: "Más de dos años de residencia ininterrumpida en el país bajo supervisión del Estado." },
+        { id: 97, question: "Son el conjunto de prerrogativas sustentadas en la dignidad humana:", options: ["Derecho Internacional Humanitario.", "Ciudadanía.", "Derechos Humanos.", "Derechos y obligaciones."], correctAnswer: "Derechos Humanos." },
+        { id: 98, question: "Son ciudadanas y ciudadanos todas las bolivianas y todos los bolivianos, y ejercerán su ciudadanía a partir de:", options: ["Su nacimiento.", "Los 18 años de edad.", "Los 21 años de edad.", "Los 19 años de edad."], correctAnswer: "Los 18 años de edad." },
+        { id: 99, question: "Tras la creación de la Organización de Naciones Unidas (ONU), en 1945, surgió la Declaración Universal de Derechos Humanos, como resultado de la Segunda Guerra Mundial, para promover la paz y desarrollar relaciones amistosas entre las naciones, a fin de evitar nuevos enfrentamientos mundiales, esta declaración fue en el año:", options: ["1948.", "1945.", "1879.", "1918."], correctAnswer: "1948." },
+        { id: 100, question: "Derechos de primera generación son:", options: ["Derecho a la vida, la libertad, derechos civiles y políticos.", "Derechos económicos, sociales y culturales.", "Derecho a la autodeterminación, a la coexistencia pacífica y a la identidad cultural.", "Derecho a la democracia, a la información y al pluralismo."], correctAnswer: "Derecho a la vida, la libertad, derechos civiles y políticos." },
+    ];
+
+    // ***************************************************************
+    // 2. LÓGICA DE SELECCIÓN, CÁLCULO Y ENVÍO
+    // ***************************************************************
+
+    let currentQuizQuestions = [];
+    let scoreData = { score: 0, total: 0, percentage: 0, results: [] };
+    const MAX_QUESTIONS = quizData.length;
+
+    document.getElementById('totalQuestionsAvailable').textContent = MAX_QUESTIONS;
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function generateQuiz() {
+        const numInput = document.getElementById('numQuestions');
+        let numQuestions = parseInt(numInput.value);
+
+        // 1. Validación de la cantidad de preguntas
+        if (isNaN(numQuestions) || numQuestions < 1) {
+            numQuestions = 1;
+        } else if (numQuestions > MAX_QUESTIONS) {
+            numQuestions = MAX_QUESTIONS;
+        }
+        numInput.value = numQuestions; // Actualizar el input con el valor validado
+
+        // 2. Actualizar el display de preguntas cargadas
+        document.getElementById('currentLoadedQuestions').textContent = numQuestions;
+
+        // 3. Mezclar y seleccionar las preguntas
+        shuffleArray(quizData);
+        currentQuizQuestions = quizData.slice(0, numQuestions);
+        
+        const quizForm = document.getElementById('quizForm');
+        quizForm.innerHTML = ''; // Limpiar el formulario anterior
+        document.getElementById('results').style.display = 'none'; // Ocultar resultados
+        document.getElementById('sendBtn').style.display = 'none'; // Ocultar botón de envío
+
+        // 4. Renderizar las preguntas
+        currentQuizQuestions.forEach((q, index) => {
+            const questionNumber = index + 1;
+            const questionBlock = document.createElement('div');
+            questionBlock.classList.add('question-block');
+            
+            let html = `<div class="question-text">${questionNumber}.- ${q.question}</div><div class="options">`;
+            
+            // Mezclamos las opciones
+            let shuffledOptions = [...q.options];
+            shuffleArray(shuffledOptions);
+
+            shuffledOptions.forEach((option, optionIndex) => {
+                const radioName = `q${q.id}`;
+                const optionId = `q${q.id}opt${optionIndex}`;
+
+                html += `
+                    <label for="${optionId}">
+                        <input type="radio" id="${optionId}" name="${radioName}" value="${option}">
+                        ${option}
+                    </label>
+                `;
+            });
+
+            html += `</div>`;
+            questionBlock.innerHTML = html;
+            quizForm.appendChild(questionBlock);
+        });
+
+        // Asegurar que el scroll esté arriba para el nuevo examen
+        window.scrollTo(0, 0);
+    }
+
+    function calculateScore() {
+        if (currentQuizQuestions.length === 0) {
+            alert("Por favor, cargue el examen primero.");
+            return;
+        }
+
+        const quizForm = document.getElementById('quizForm');
+        const resultsDiv = document.getElementById('results');
+        const totalQuestions = currentQuizQuestions.length;
+        let score = 0;
+        let detailedResults = [];
+        
+        currentQuizQuestions.forEach((q, index) => {
+            const radioName = `q${q.id}`;
+            const selectedOption = quizForm.elements[radioName];
+            const questionBlock = quizForm.children[index];
+            const questionNumber = index + 1;
+            
+            // 1. Limpiar estilos y feedback anteriores
+            questionBlock.classList.remove('correct', 'incorrect');
+            const feedbackElement = questionBlock.querySelector('.correct-answer');
+            if (feedbackElement) { feedbackElement.remove(); }
+            Array.from(questionBlock.querySelectorAll('label')).forEach(label => {
+                label.style.fontWeight = 'normal';
+                label.style.backgroundColor = 'transparent';
+            });
+
+            let userAnswer = 'No Respondida';
+            let isCorrect = false;
+
+            if (selectedOption && selectedOption.value) {
+                userAnswer = selectedOption.value;
+                const correctAnswer = q.correctAnswer;
+                
+                if (userAnswer === correctAnswer) {
+                    score++;
+                    isCorrect = true;
+                }
+            }
+
+            // 2. Aplicar estilos y mostrar respuesta correcta
+            if (isCorrect) {
+                questionBlock.classList.add('correct');
+            } else {
+                questionBlock.classList.add('incorrect');
+                
+                const answerFeedback = document.createElement('div');
+                answerFeedback.classList.add('correct-answer');
+                answerFeedback.innerHTML = `Respuesta Correcta: ${q.correctAnswer}`;
+                questionBlock.appendChild(answerFeedback);
+
+                Array.from(questionBlock.querySelectorAll(`input[name="${radioName}"]`)).forEach(input => {
+                    const label = input.parentElement;
+                    if (input.checked) {
+                        label.style.fontWeight = 'bold';
+                        label.style.backgroundColor = '#f0c0c0';
+                    }
+                    if (input.value === q.correctAnswer) {
+                        label.style.fontWeight = 'bold';
+                        label.style.backgroundColor = '#c3e6cb';
+                    }
+                });
+            }
+
+            // 3. Almacenar resultados detallados
+            detailedResults.push({
+                number: questionNumber,
+                question: q.question,
+                userAnswer: userAnswer,
+                correctAnswer: q.correctAnswer,
+                isCorrect: isCorrect
+            });
+        });
+
+        // 4. Actualizar la variable de resultados globales
+        const percentage = (score / totalQuestions) * 100;
+        scoreData = { score: score, total: totalQuestions, percentage: percentage, results: detailedResults };
+
+        // 5. Mostrar resultados en pantalla
+        resultsDiv.innerHTML = `Puntuación Final: ${score} / ${totalQuestions} preguntas (${percentage.toFixed(2)}%)`;
+        resultsDiv.style.display = 'block';
+        resultsDiv.classList.remove('incorrect', 'correct');
+        // Usar un criterio de aprobación simple (ej. 70%)
+        resultsDiv.classList.add(score >= (totalQuestions * 0.70) ? 'correct' : 'incorrect'); 
+        
+        // 6. Mostrar botón de envío y desplazar
+        document.getElementById('sendBtn').style.display = 'block';
+        resultsDiv.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function sendResults() {
+        if (!scoreData || scoreData.results.length === 0 || scoreData.total === 0) {
+            alert("Primero debe calificar el examen.");
+            return;
+        }
+
+        let bodyContent = `Resultados del Examen de Historia (Total: ${scoreData.total} preguntas):\n\n`;
+        bodyContent += `Puntuación: ${scoreData.score} de ${scoreData.total} (${scoreData.percentage.toFixed(2)}%)\n`;
+        bodyContent += `---------------------------------------------------\n\n`;
+
+        scoreData.results.forEach(res => {
+            const status = res.isCorrect ? "CORRECTA" : "INCORRECTA";
+            // Escapar saltos de línea y el caracter '&' para el cuerpo del mailto
+            const questionText = res.question.replace(/\n/g, ' ').replace(/&/g, '%26');
+            const userAnswerText = res.userAnswer.replace(/\n/g, ' ').replace(/&/g, '%26');
+            const correctAnswerText = res.correctAnswer.replace(/\n/g, ' ').replace(/&/g, '%26');
+
+            bodyContent += `Pregunta ${res.number}: ${questionText}\n`;
+            bodyContent += `Respuesta del Usuario: ${userAnswerText}\n`;
+            bodyContent += `Respuesta Correcta: ${correctAnswerText}\n`;
+            bodyContent += `Estado: ${status}\n\n`;
+        });
+
+        const subject = encodeURIComponent(`Resultados Examen de Historia: ${scoreData.score}/${scoreData.total}`);
+        const body = encodeURIComponent(bodyContent);
+        
+        // Construir el enlace mailto
+        const mailtoLink = `mailto:${DESTINATION_EMAIL}?subject=${subject}&body=${body}`;
+
+        // Abrir el cliente de correo
+        window.location.href = mailtoLink;
+
+        alert(`Se abrirá su aplicación de correo con los resultados listos para enviar a ${DESTINATION_EMAIL}. Por favor, complete el envío manualmente.`);
+    }
+
+    // Inicializar el examen al cargar la página (carga 20 por defecto)
+    window.onload = generateQuiz;
+</script>
+
+</body>
+</html>
